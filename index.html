@@ -375,12 +375,21 @@
       </div>
       <div>
         <div class="flex justify-between items-center mb-1">
-          <label class="font-bold text-gray-700">사진 이미지 URL</label>
-          <button onclick="generateAIPostImage()" class="text-[10px] text-indigo-600 font-bold bg-indigo-50 px-2 py-0.5 rounded-md hover:bg-indigo-100 flex items-center gap-1">
-            <i data-lucide="sparkles" class="w-3 h-3"></i> AI 일러스트 생성
-          </button>
+          <label class="font-bold text-gray-700">사진</label>
+          <div class="flex items-center gap-1">
+            <button type="button" onclick="document.getElementById('post-photo-file').click()" class="text-[10px] text-gray-700 font-bold bg-gray-100 px-2 py-0.5 rounded-md hover:bg-gray-200 flex items-center gap-1">
+              <i data-lucide="upload" class="w-3 h-3"></i> 내 사진 올리기
+            </button>
+            <button type="button" onclick="generateAIPostImage()" class="text-[10px] text-indigo-600 font-bold bg-indigo-50 px-2 py-0.5 rounded-md hover:bg-indigo-100 flex items-center gap-1">
+              <i data-lucide="sparkles" class="w-3 h-3"></i> AI 생성
+            </button>
+          </div>
         </div>
-        <input type="text" id="post-photo-input" value="https://images.unsplash.com/photo-1554118811-1e0d58224f24?w=600&auto=format&fit=crop&q=80" class="w-full p-2.5 bg-gray-50 border border-gray-200 rounded-xl outline-none text-gray-600 text-[11px]">
+        <input type="file" id="post-photo-file" accept="image/*" class="hidden" onchange="handlePostPhotoFile(this)">
+        <div id="post-photo-preview" class="w-full h-24 rounded-xl overflow-hidden border border-gray-200 bg-gray-50 mb-1.5">
+          <img id="post-photo-preview-img" src="https://images.unsplash.com/photo-1554118811-1e0d58224f24?w=600&auto=format&fit=crop&q=80" class="w-full h-full object-cover">
+        </div>
+        <input type="text" id="post-photo-input" value="https://images.unsplash.com/photo-1554118811-1e0d58224f24?w=600&auto=format&fit=crop&q=80" oninput="document.getElementById('post-photo-preview-img').src=this.value" placeholder="또는 이미지 URL 직접 입력" class="w-full p-2.5 bg-gray-50 border border-gray-200 rounded-xl outline-none text-gray-600 text-[11px]">
       </div>
     </div>
 
@@ -478,7 +487,7 @@
       activeTab: 'our',
       activeCalendarView: 'daily', // 'daily' | 'monthly'
       selectedDate: '2026-09-16',
-      showNotificationModal: true,
+      showNotificationModal: false,
 
       // Events Data List
       events: [
@@ -1252,6 +1261,7 @@
       const notif = state.notifications.find(n => n.id === id);
       if (notif) {
         notif.read = true;
+        state.showNotificationModal = false;
         saveState();
         if (notif.type === 'calendar') switchTab('calendar-daily');
         else switchTab('our');
@@ -1260,6 +1270,7 @@
 
     function clearAllNotifications() {
       state.notifications.forEach(n => n.read = true);
+      state.showNotificationModal = false;
       saveState();
       showToast('모든 알림이 읽음 처리되었습니다');
       refreshViews();
@@ -1414,6 +1425,18 @@
       }
     }
 
+    function handlePostPhotoFile(input) {
+      const file = input.files && input.files[0];
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        document.getElementById('post-photo-input').value = e.target.result;
+        document.getElementById('post-photo-preview-img').src = e.target.result;
+        showToast('사진이 업로드되었습니다');
+      };
+      reader.readAsDataURL(file);
+    }
+
     async function generateAIPostImage() {
       const promptText = prompt("어떤 분위기의 사진 일러스트를 생성할까요?", "A warm watercolor illustration of a cozy Korean romantic cafe with pastries and flowers");
       if (!promptText) return;
@@ -1441,7 +1464,8 @@
         if (base64Data) {
           const imgUrl = `data:image/png;base64,${base64Data}`;
           document.getElementById('post-photo-input').value = imgUrl;
-          showToast("AI 이미지 생성이 완료되어 입력창에 적용되었습니다!");
+          document.getElementById('post-photo-preview-img').src = imgUrl;
+          showToast("AI 이미지 생성이 완료되어 적용되었습니다!");
         } else {
           showToast("샘플 사진이 적용되었습니다");
         }
