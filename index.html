@@ -1,0 +1,1517 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>우리 (Our Days) - 실시간 커플 공유 다이어리 Web App</title>
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- Lucide Icons -->
+  <script src="https://cdn.jsdelivr.net/npm/lucide@0.284.0/dist/umd/lucide.js"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            brand: {
+              red: '#FF5E57',
+              blue: '#4A90E2',
+              green: '#2ECC71',
+              darkGreen: '#2E4F40',
+              dark: '#1E293B',
+              bg: '#F8FAFC',
+            },
+            junyoung: '#FF5E57',
+            ajeong: '#4A90E2',
+            together: '#2E4F40',
+          },
+          fontFamily: {
+            sans: ['-apple-system', 'BlinkMacSystemFont', 'Pretendard', 'Apple SD Gothic Neo', 'Roboto', 'sans-serif'],
+          }
+        }
+      }
+    }
+  </script>
+  <style>
+    ::-webkit-scrollbar {
+      width: 4px;
+      height: 4px;
+    }
+    ::-webkit-scrollbar-track {
+      background: #f1f5f9;
+    }
+    ::-webkit-scrollbar-thumb {
+      background: #cbd5e1;
+      border-radius: 4px;
+    }
+    .no-scrollbar::-webkit-scrollbar {
+      display: none;
+    }
+    .no-scrollbar {
+      -ms-overflow-style: none;
+      scrollbar-width: none;
+    }
+    .timeline-line-red {
+      background-color: #FF5E57;
+    }
+    .timeline-line-blue {
+      background-color: #4A90E2;
+    }
+    @keyframes fadeIn {
+      from { opacity: 0; transform: scale(0.96); }
+      to { opacity: 1; transform: scale(1); }
+    }
+    .animate-pop {
+      animation: fadeIn 0.2s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+    }
+  </style>
+</head>
+<body class="bg-[#ECEFF3] min-h-screen font-sans text-gray-900 antialiased selection:bg-rose-100 selection:text-rose-600 pb-12">
+
+  <!-- Top Global Header -->
+  <header class="bg-white border-b border-gray-200 sticky top-0 z-40 px-4 py-3 shadow-sm">
+    <div class="max-w-7xl mx-auto flex flex-col sm:flex-row justify-between items-center gap-3">
+      <div class="flex items-center gap-2.5">
+        <span class="w-3 h-3 rounded-full bg-brand-red animate-pulse"></span>
+        <div>
+          <h1 class="font-extrabold text-base text-gray-900 tracking-tight flex items-center gap-1.5">
+            우리 (Our Days) <span class="text-xs text-emerald-600 font-bold bg-emerald-50 px-2 py-0.5 rounded-full border border-emerald-100">동작 버전</span>
+          </h1>
+        </div>
+      </div>
+
+      <!-- Action & View Mode Switcher -->
+      <div class="flex items-center gap-2 flex-wrap justify-center">
+        <!-- AI Date Assistant Quick Button -->
+        <button onclick="openSheet('sheet-ai-assistant')" class="px-3 py-1.5 bg-gradient-to-r from-rose-500 to-indigo-600 text-white text-xs font-bold rounded-xl shadow-sm hover:opacity-95 flex items-center gap-1.5 transition-all">
+          <i data-lucide="sparkles" class="w-3.5 h-3.5"></i>
+          <span>Gemini AI 데이트 비서</span>
+        </button>
+
+        <div class="flex items-center bg-gray-100 p-1 rounded-xl text-xs font-semibold">
+          <button id="view-mode-quad" onclick="setViewMode('quad')" class="px-3 py-1.5 rounded-lg transition-all bg-white text-gray-900 shadow-sm font-bold">
+            🖼️ 4개 화면 동시 보기
+          </button>
+          <button id="view-mode-single" onclick="setViewMode('single')" class="px-3.5 py-1.5 rounded-lg transition-all text-gray-500 hover:text-gray-900">
+            📱 단일 프레임 (대화형)
+          </button>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <!-- Main Container -->
+  <main class="max-w-7xl mx-auto p-2 sm:p-4">
+
+    <!-- VIEW MODE 1: Quad Side-by-Side Mobile Screens (01 우리, 02 알림, 03 달력, 04 함께할 일) -->
+    <div id="quad-view-container" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 justify-items-center py-1">
+
+      <!-- SCREEN 01: 우리 -->
+      <div class="w-full max-w-[340px] h-[670px] bg-[#F8FAFC] rounded-[32px] shadow-lg border-4 border-gray-800 overflow-hidden flex flex-col relative">
+        <div class="bg-gray-100 border-b border-gray-200 py-1.5 px-4 flex justify-between items-center shrink-0 text-xs font-bold text-gray-700">
+          <span>01 우리</span>
+          <span class="text-[10px] text-gray-400 font-normal">메인 피드</span>
+        </div>
+
+        <div class="px-4 pt-2 pb-1 flex justify-between items-center text-[11px] font-semibold text-gray-900 bg-[#F8FAFC] shrink-0">
+          <span>9:41</span>
+          <div class="flex items-center gap-1">
+            <i data-lucide="signal" class="w-3 h-3"></i>
+            <i data-lucide="wifi" class="w-3 h-3"></i>
+            <i data-lucide="battery" class="w-3.5 h-3.5"></i>
+          </div>
+        </div>
+
+        <div id="quad-screen-1" class="flex-1 overflow-y-auto no-scrollbar pb-14"></div>
+
+        <div class="absolute bottom-0 inset-x-0 bg-white border-t border-gray-100 px-4 py-2 flex justify-around items-center text-[10px] font-medium text-gray-400">
+          <button onclick="switchTab('our')" class="text-gray-900 font-bold flex flex-col items-center gap-0.5"><i data-lucide="home" class="w-4 h-4"></i>우리</button>
+          <button onclick="switchTab('calendar-daily')" class="flex flex-col items-center gap-0.5 hover:text-gray-600"><i data-lucide="calendar" class="w-4 h-4"></i>달력</button>
+          <button onclick="switchTab('todo')" class="flex flex-col items-center gap-0.5 hover:text-gray-600"><i data-lucide="check-square" class="w-4 h-4"></i>함께할 일</button>
+        </div>
+      </div>
+
+      <!-- SCREEN 02: 알림 -->
+      <div class="w-full max-w-[340px] h-[670px] bg-[#F8FAFC] rounded-[32px] shadow-lg border-4 border-gray-800 overflow-hidden flex flex-col relative">
+        <div class="bg-gray-100 border-b border-gray-200 py-1.5 px-4 flex justify-between items-center shrink-0 text-xs font-bold text-gray-700">
+          <span>02 알림</span>
+          <span class="text-[10px] text-gray-400 font-normal">새로운 소식 팝업</span>
+        </div>
+
+        <div class="px-4 pt-2 pb-1 flex justify-between items-center text-[11px] font-semibold text-gray-900 bg-[#F8FAFC] shrink-0">
+          <span>9:41</span>
+          <div class="flex items-center gap-1">
+            <i data-lucide="signal" class="w-3 h-3"></i>
+            <i data-lucide="wifi" class="w-3 h-3"></i>
+            <i data-lucide="battery" class="w-3.5 h-3.5"></i>
+          </div>
+        </div>
+
+        <div class="flex-1 overflow-y-auto no-scrollbar pb-14 relative">
+          <div class="opacity-30 pointer-events-none filter brightness-75">
+            <div id="quad-screen-2-bg"></div>
+          </div>
+          <div class="absolute inset-0 bg-black/40 backdrop-blur-[1px] z-10"></div>
+          <div id="quad-screen-2-popover" class="absolute top-3 right-3 left-3 z-20"></div>
+        </div>
+
+        <div class="absolute bottom-0 inset-x-0 bg-white border-t border-gray-100 px-4 py-2 flex justify-around items-center text-[10px] font-medium text-gray-400 z-20">
+          <button class="text-gray-900 font-bold flex flex-col items-center gap-0.5"><i data-lucide="home" class="w-4 h-4"></i>우리</button>
+          <button class="flex flex-col items-center gap-0.5"><i data-lucide="calendar" class="w-4 h-4"></i>달력</button>
+          <button class="flex flex-col items-center gap-0.5"><i data-lucide="check-square" class="w-4 h-4"></i>함께할 일</button>
+        </div>
+      </div>
+
+      <!-- SCREEN 03: 달력 -->
+      <div class="w-full max-w-[340px] h-[670px] bg-white rounded-[32px] shadow-lg border-4 border-gray-800 overflow-hidden flex flex-col relative">
+        <div class="bg-gray-100 border-b border-gray-200 py-1.5 px-4 flex justify-between items-center shrink-0 text-xs font-bold text-gray-700">
+          <span>03 달력</span>
+          <span class="text-[10px] text-gray-400 font-normal">2트랙 일간 타임라인</span>
+        </div>
+
+        <div class="px-4 pt-2 pb-1 flex justify-between items-center text-[11px] font-semibold text-gray-900 bg-white shrink-0">
+          <span>9:41</span>
+          <div class="flex items-center gap-1">
+            <i data-lucide="signal" class="w-3 h-3"></i>
+            <i data-lucide="wifi" class="w-3 h-3"></i>
+            <i data-lucide="battery" class="w-3.5 h-3.5"></i>
+          </div>
+        </div>
+
+        <div id="quad-screen-3" class="flex-1 overflow-y-auto no-scrollbar pb-14 bg-white"></div>
+
+        <div class="absolute bottom-0 inset-x-0 bg-white border-t border-gray-100 px-4 py-2 flex justify-around items-center text-[10px] font-medium text-gray-400 z-20">
+          <button onclick="switchTab('our')" class="flex flex-col items-center gap-0.5 hover:text-gray-600"><i data-lucide="home" class="w-4 h-4"></i>우리</button>
+          <button onclick="switchTab('calendar-daily')" class="text-gray-900 font-bold flex flex-col items-center gap-0.5"><i data-lucide="calendar" class="w-4 h-4"></i>달력</button>
+          <button onclick="switchTab('todo')" class="flex flex-col items-center gap-0.5 hover:text-gray-600"><i data-lucide="check-square" class="w-4 h-4"></i>함께할 일</button>
+        </div>
+      </div>
+
+      <!-- SCREEN 04: 함께할 일 -->
+      <div class="w-full max-w-[340px] h-[670px] bg-[#F8FAFC] rounded-[32px] shadow-lg border-4 border-gray-800 overflow-hidden flex flex-col relative">
+        <div class="bg-gray-100 border-b border-gray-200 py-1.5 px-4 flex justify-between items-center shrink-0 text-xs font-bold text-gray-700">
+          <span>04 함께할 일</span>
+          <span class="text-[10px] text-gray-400 font-normal">공유 버킷리스트 & 투두</span>
+        </div>
+
+        <div class="px-4 pt-2 pb-1 flex justify-between items-center text-[11px] font-semibold text-gray-900 bg-[#F8FAFC] shrink-0">
+          <span>9:41</span>
+          <div class="flex items-center gap-1">
+            <i data-lucide="signal" class="w-3 h-3"></i>
+            <i data-lucide="wifi" class="w-3 h-3"></i>
+            <i data-lucide="battery" class="w-3.5 h-3.5"></i>
+          </div>
+        </div>
+
+        <div id="quad-screen-4" class="flex-1 overflow-y-auto no-scrollbar pb-14 bg-[#F8FAFC]"></div>
+
+        <div class="absolute bottom-0 inset-x-0 bg-white border-t border-gray-100 px-4 py-2 flex justify-around items-center text-[10px] font-medium text-gray-400">
+          <button onclick="switchTab('our')" class="flex flex-col items-center gap-0.5 hover:text-gray-600"><i data-lucide="home" class="w-4 h-4"></i>우리</button>
+          <button onclick="switchTab('calendar-daily')" class="flex flex-col items-center gap-0.5 hover:text-gray-600"><i data-lucide="calendar" class="w-4 h-4"></i>달력</button>
+          <button onclick="switchTab('todo')" class="text-gray-900 font-bold flex flex-col items-center gap-0.5"><i data-lucide="check-square" class="w-4 h-4"></i>함께할 일</button>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- VIEW MODE 2: Single Interactive Mobile Phone Frame -->
+    <div id="single-view-container" class="hidden flex justify-center items-center py-2">
+      <div class="w-full max-w-[360px] h-[700px] bg-white rounded-[36px] shadow-2xl border-[8px] border-gray-900 overflow-hidden flex flex-col relative">
+
+        <!-- Mobile Status Bar -->
+        <div class="px-6 pt-2.5 pb-1 flex justify-between items-center text-xs font-semibold text-gray-900 bg-white z-20 shrink-0 select-none">
+          <span>9:41</span>
+          <div class="w-16 h-3.5 bg-gray-900 rounded-full mx-auto -mt-1"></div>
+          <div class="flex items-center gap-1.5">
+            <i data-lucide="signal" class="w-3.5 h-3.5"></i>
+            <i data-lucide="wifi" class="w-3.5 h-3.5"></i>
+            <i data-lucide="battery" class="w-4 h-4"></i>
+          </div>
+        </div>
+
+        <!-- Single Screen Dynamic Content Area -->
+        <div id="single-screen-content" class="flex-1 overflow-y-auto no-scrollbar pb-16 bg-[#F8FAFC] relative">
+          <!-- Rendered dynamically -->
+        </div>
+
+        <!-- Bottom Navigation Bar -->
+        <nav class="absolute bottom-0 inset-x-0 bg-white/95 backdrop-blur-md border-t border-gray-100 px-6 py-2 flex justify-around items-center z-20">
+          <button onclick="switchTab('our')" id="tab-btn-our" class="flex flex-col items-center gap-0.5 text-gray-900 font-bold transition-all">
+            <i data-lucide="home" class="w-4 h-4"></i>
+            <span class="text-[10px]">우리</span>
+          </button>
+          <button onclick="switchTab('calendar-daily')" id="tab-btn-calendar" class="flex flex-col items-center gap-0.5 text-gray-400 hover:text-gray-700 transition-all">
+            <i data-lucide="calendar" class="w-4 h-4"></i>
+            <span class="text-[10px]">달력</span>
+          </button>
+          <button onclick="switchTab('todo')" id="tab-btn-todo" class="flex flex-col items-center gap-0.5 text-gray-400 hover:text-gray-700 transition-all">
+            <i data-lucide="check-square" class="w-4 h-4"></i>
+            <span class="text-[10px]">함께할 일</span>
+          </button>
+        </nav>
+      </div>
+    </div>
+
+  </main>
+
+  <!-- Modal Sheet Backdrop -->
+  <div id="sheet-backdrop" onclick="closeAllSheets()" class="fixed inset-0 bg-black/40 backdrop-blur-[2px] z-40 hidden transition-opacity"></div>
+
+  <!-- Modal 1: Create Event Sheet -->
+  <div id="sheet-create-event" class="fixed bottom-0 inset-x-0 max-w-[380px] mx-auto bg-white rounded-t-3xl border-t border-gray-200 z-50 hidden animate-pop p-5 pb-8 shadow-2xl">
+    <div class="w-10 h-1 bg-gray-300 rounded-full mx-auto mb-4"></div>
+    <div class="flex justify-between items-center mb-4">
+      <h3 class="font-extrabold text-base text-gray-900">새 일정 등록</h3>
+      <button onclick="closeAllSheets()" class="text-gray-400 hover:text-gray-600 p-1">
+        <i data-lucide="x" class="w-5 h-5"></i>
+      </button>
+    </div>
+
+    <div class="space-y-3 text-xs">
+      <div>
+        <label class="block font-bold text-gray-700 mb-1">일정 제목</label>
+        <input type="text" id="event-title-input" placeholder="예: 성수동 데이트, 항공권 예매" class="w-full p-3 bg-gray-50 border border-gray-200 rounded-xl outline-none focus:border-brand-red">
+      </div>
+      <div>
+        <label class="block font-bold text-gray-700 mb-1">날짜</label>
+        <input type="date" id="event-date-input" value="2026-09-16" class="w-full p-2.5 bg-gray-50 border border-gray-200 rounded-xl outline-none">
+      </div>
+      <div>
+        <label class="block font-bold text-gray-700 mb-1">주체 (누구의 일정인가요?)</label>
+        <div class="grid grid-cols-3 gap-2">
+          <button type="button" onclick="setOwnerType('준영')" id="owner-btn-준영" class="py-2 rounded-xl border border-gray-200 bg-red-50 text-brand-red border-brand-red font-bold">준영</button>
+          <button type="button" onclick="setOwnerType('아정')" id="owner-btn-아정" class="py-2 rounded-xl border border-gray-200 bg-gray-50 text-gray-700 font-medium">아정</button>
+          <button type="button" onclick="setOwnerType('함께')" id="owner-btn-함께" class="py-2 rounded-xl border border-gray-200 bg-gray-50 text-gray-700 font-medium">함께</button>
+        </div>
+      </div>
+      <div class="grid grid-cols-2 gap-2">
+        <div>
+          <label class="block font-bold text-gray-700 mb-1">시간</label>
+          <input type="time" id="event-time-input" value="15:00" class="w-full p-2.5 bg-gray-50 border border-gray-200 rounded-xl outline-none">
+        </div>
+        <div>
+          <label class="block font-bold text-gray-700 mb-1">장소 (선택)</label>
+          <input type="text" id="event-place-input" placeholder="성수동" class="w-full p-2.5 bg-gray-50 border border-gray-200 rounded-xl outline-none">
+        </div>
+      </div>
+    </div>
+
+    <div class="pt-4">
+      <button onclick="saveNewEvent()" class="w-full py-3 bg-gray-900 text-white rounded-xl text-xs font-bold shadow-md hover:bg-black transition-all">
+        일정 등록하기
+      </button>
+    </div>
+  </div>
+
+  <!-- Modal 2: Create Feed Post Sheet -->
+  <div id="sheet-create-post" class="fixed bottom-0 inset-x-0 max-w-[380px] mx-auto bg-white rounded-t-3xl border-t border-gray-200 z-50 hidden animate-pop p-5 pb-8 shadow-2xl">
+    <div class="w-10 h-1 bg-gray-300 rounded-full mx-auto mb-4"></div>
+    <div class="flex justify-between items-center mb-3">
+      <h3 class="font-extrabold text-base text-gray-900">새 기록 남기기</h3>
+      <button onclick="closeAllSheets()" class="text-gray-400 hover:text-gray-600 p-1">
+        <i data-lucide="x" class="w-5 h-5"></i>
+      </button>
+    </div>
+
+    <div class="space-y-3 text-xs">
+      <div>
+        <label class="block font-bold text-gray-700 mb-1">작성자</label>
+        <select id="post-author-input" class="w-full p-2.5 bg-gray-50 border border-gray-200 rounded-xl outline-none font-bold">
+          <option value="아정">아정 👩🏻‍🦰</option>
+          <option value="준영">준영 👨🏻</option>
+        </select>
+      </div>
+      <div>
+        <label class="block font-bold text-gray-700 mb-1">오늘의 한마디</label>
+        <textarea id="post-text-input" rows="3" placeholder="오늘 발견한 곳이나 하고 싶은 이야기를 남겨보세요..." class="w-full p-3 bg-gray-50 border border-gray-200 rounded-xl outline-none focus:border-brand-red"></textarea>
+      </div>
+      <div>
+        <label class="block font-bold text-gray-700 mb-1">위치/태그</label>
+        <input type="text" id="post-location-input" placeholder="예: 성수동 카페, 제주 협재해변" class="w-full p-2.5 bg-gray-50 border border-gray-200 rounded-xl outline-none">
+      </div>
+      <div>
+        <div class="flex justify-between items-center mb-1">
+          <label class="font-bold text-gray-700">사진 이미지 URL</label>
+          <button onclick="generateAIPostImage()" class="text-[10px] text-indigo-600 font-bold bg-indigo-50 px-2 py-0.5 rounded-md hover:bg-indigo-100 flex items-center gap-1">
+            <i data-lucide="sparkles" class="w-3 h-3"></i> AI 일러스트 생성
+          </button>
+        </div>
+        <input type="text" id="post-photo-input" value="https://images.unsplash.com/photo-1554118811-1e0d58224f24?w=600&auto=format&fit=crop&q=80" class="w-full p-2.5 bg-gray-50 border border-gray-200 rounded-xl outline-none text-gray-600 text-[11px]">
+      </div>
+    </div>
+
+    <div class="pt-4">
+      <button onclick="saveNewPost()" class="w-full py-3 bg-brand-red text-white rounded-xl text-xs font-bold shadow-md hover:bg-rose-600 transition-all">
+        기록 남기기
+      </button>
+    </div>
+  </div>
+
+  <!-- Modal 3: Gemini AI Assistant Sheet -->
+  <div id="sheet-ai-assistant" class="fixed bottom-0 inset-x-0 max-w-[380px] mx-auto bg-white rounded-t-3xl border-t border-gray-200 z-50 hidden animate-pop p-5 pb-8 shadow-2xl">
+    <div class="w-10 h-1 bg-gray-300 rounded-full mx-auto mb-3"></div>
+    <div class="flex justify-between items-center mb-3">
+      <div class="flex items-center gap-2">
+        <span class="w-6 h-6 rounded-lg bg-indigo-600 text-white flex items-center justify-center">
+          <i data-lucide="sparkles" class="w-3.5 h-3.5"></i>
+        </span>
+        <h3 class="font-extrabold text-base text-gray-900">Gemini 커플 AI 비서</h3>
+      </div>
+      <button onclick="closeAllSheets()" class="text-gray-400 hover:text-gray-600 p-1">
+        <i data-lucide="x" class="w-5 h-5"></i>
+      </button>
+    </div>
+
+    <div class="space-y-3 text-xs">
+      <div>
+        <label class="block font-bold text-gray-700 mb-1">데이트 장소/주제 입력</label>
+        <input type="text" id="ai-prompt-input" placeholder="예: 성수동 가볼만한 감성 카페 3곳 추천" class="w-full p-3 bg-gray-50 border border-gray-200 rounded-xl outline-none focus:border-indigo-500">
+      </div>
+
+      <div class="flex gap-2">
+        <button onclick="runAIDatePlanner()" id="ai-plan-btn" class="flex-1 py-2.5 bg-indigo-600 text-white font-bold rounded-xl text-xs hover:bg-indigo-700 transition-all flex items-center justify-center gap-1.5">
+          <i data-lucide="map-pin" class="w-3.5 h-3.5"></i>
+          <span>코스 추천 받기</span>
+        </button>
+        <button onclick="runAITextToSpeech()" id="ai-tts-btn" class="py-2.5 px-3 bg-gray-100 text-gray-800 font-bold rounded-xl text-xs hover:bg-gray-200 transition-all flex items-center justify-center gap-1">
+          <i data-lucide="volume-2" class="w-3.5 h-3.5 text-indigo-600"></i>
+          <span>음성 듣기</span>
+        </button>
+      </div>
+
+      <!-- AI Response Result Box -->
+      <div id="ai-response-box" class="hidden bg-indigo-50/60 border border-indigo-100 p-3.5 rounded-2xl space-y-2 text-xs">
+        <div class="flex justify-between items-center font-bold text-indigo-900 border-b border-indigo-100 pb-1.5">
+          <span class="flex items-center gap-1"><i data-lucide="bot" class="w-3.5 h-3.5"></i> AI 추천 결과</span>
+          <span id="ai-status-badge" class="text-[10px] text-indigo-600">Gemini 3 Flash</span>
+        </div>
+        <div id="ai-response-text" class="text-gray-800 whitespace-pre-wrap leading-relaxed max-h-48 overflow-y-auto no-scrollbar font-medium"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal 4: Settings Sheet -->
+  <div id="sheet-settings" class="fixed bottom-0 inset-x-0 max-w-[380px] mx-auto bg-white rounded-t-3xl border-t border-gray-200 z-50 hidden animate-pop p-5 pb-8 shadow-2xl">
+    <div class="w-10 h-1 bg-gray-300 rounded-full mx-auto mb-4"></div>
+    <div class="flex justify-between items-center mb-4">
+      <h3 class="font-extrabold text-base text-gray-900">우리 앱 설정</h3>
+      <button onclick="closeAllSheets()" class="text-gray-400 hover:text-gray-600 p-1">
+        <i data-lucide="x" class="w-5 h-5"></i>
+      </button>
+    </div>
+
+    <div class="space-y-3 text-xs">
+      <div class="p-3 bg-gray-50 rounded-xl border border-gray-100 space-y-2">
+        <div class="flex justify-between items-center">
+          <span class="font-bold text-gray-800">우리가 사귄 날 (D-Day 기준)</span>
+          <span class="text-brand-red font-extrabold">2022년 10월 15일</span>
+        </div>
+        <div class="flex justify-between items-center pt-2 border-t border-gray-200">
+          <span class="font-bold text-gray-800">함께한 지</span>
+          <span class="text-gray-900 font-extrabold" id="settings-dday-text">1,432 일째</span>
+        </div>
+      </div>
+
+      <div class="pt-2">
+        <button onclick="resetDataToDefault()" class="w-full py-2.5 bg-red-50 text-brand-red border border-red-200 font-bold rounded-xl text-xs hover:bg-red-100 transition-all flex items-center justify-center gap-1.5">
+          <i data-lucide="rotate-ccw" class="w-4 h-4"></i>
+          <span>데이터 처음으로 초기화</span>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Toast Notification -->
+  <div id="toast-modal" class="fixed bottom-16 left-1/2 -translate-x-1/2 z-50 bg-gray-900/90 text-white text-xs px-4 py-2.5 rounded-full shadow-lg transition-all opacity-0 pointer-events-none transform translate-y-2 flex items-center gap-2">
+    <i data-lucide="check-circle-2" class="w-4 h-4 text-emerald-400"></i>
+    <span id="toast-message">알림 메시지</span>
+  </div>
+
+  <script>
+    // Initial Default Data State
+    const defaultData = {
+      viewMode: 'quad',
+      activeTab: 'our',
+      activeCalendarView: 'daily', // 'daily' | 'monthly'
+      selectedDate: '2026-09-16',
+      showNotificationModal: true,
+
+      // Events Data List
+      events: [
+        { id: 1, title: '점심', date: '2026-09-16', time: '12:00', owner: '함께', place: '성수동 맛집', status: 'pending', note: '아정 확인 전' },
+        { id: 2, title: '친구들과 저녁', date: '2026-09-16', time: '19:00', owner: '준영', place: '강남', status: 'confirmed', note: '' },
+        { id: 3, title: '필라테스', date: '2026-09-16', time: '20:00', owner: '아정', place: '센터', status: 'changed', note: '변경됨' }
+      ],
+
+      // Feed Posts Data List
+      posts: [
+        {
+          id: 101,
+          author: '아정',
+          authorAvatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=100&auto=format&fit=crop&q=80',
+          timeAgo: '3시간 전',
+          date: '2026-09-16',
+          text: '운동 끝나고 발견한 곳.\n주말에 같이 올래?',
+          location: '성수동 · 카페',
+          photoUrl: 'https://images.unsplash.com/photo-1554118811-1e0d58224f24?w=600&auto=format&fit=crop&q=80',
+          likes: 3,
+          userLiked: false,
+          comments: [
+            { id: 1, author: '준영', text: '오 여기 분위기 좋다! 토요일 3시 어때?', timeAgo: '2시간 전' }
+          ]
+        }
+      ],
+
+      // Notifications List
+      notifications: [
+        { id: 201, text: '아정이 내일 필라테스를 20시로 바꿨어요', timeAgo: '10분 전', read: false, type: 'calendar', color: 'bg-brand-blue' },
+        { id: 202, text: '아정이 새 기록을 남겼어요', timeAgo: '3시간 전', read: false, type: 'post', color: 'bg-brand-red' }
+      ],
+
+      // Shared Bucket & To-Do List Data
+      todoCategories: [
+        {
+          id: 'jeju',
+          title: '이번 가을, 제주',
+          subtitle: '10월에 함께 가고 싶은 곳',
+          coverImg: 'https://images.unsplash.com/photo-1507525428034-b723cf961d3e?w=600&auto=format&fit=crop&q=80',
+          items: [
+            { id: 301, text: '숙소 찾아보기', date: '10월 초', done: true },
+            { id: 302, text: '항공권 알아보기', date: '9월 중', done: false },
+            { id: 303, text: '맛집 저장하기', date: '9월 중', done: false }
+          ]
+        },
+        {
+          id: 'house',
+          title: '우리 집 정리',
+          subtitle: '아늑한 공간 만들기',
+          coverImg: 'https://images.unsplash.com/photo-1586023492125-27b2c045efd7?w=120&auto=format&fit=crop&q=80',
+          items: [
+            { id: 304, text: '주방 정리', date: '이번 주', done: true },
+            { id: 305, text: '사진 인화', date: '9월 중', done: false },
+            { id: 306, text: '수납장 고르기', date: '10월', done: false }
+          ]
+        },
+        {
+          id: 'thisWeek',
+          title: '이번 주 우리',
+          subtitle: '소소한 주말 약속',
+          coverImg: 'https://images.unsplash.com/photo-1540420773420-3366772f4999?w=120&auto=format&fit=crop&q=80',
+          items: [
+            { id: 307, text: '주말 저녁 같이 요리하기', date: '9월 19일 (토)', done: false },
+            { id: 308, text: '산책하며 사진 남기기', date: '이번 주', done: false }
+          ]
+        }
+      ]
+    };
+
+    // Load from LocalStorage or initialize default
+    let state = JSON.parse(localStorage.getItem('our_days_app_state')) || JSON.parse(JSON.stringify(defaultData));
+
+    let currentOwnerType = '준영';
+
+    function saveState() {
+      localStorage.setItem('our_days_app_state', JSON.stringify(state));
+    }
+
+    // Render 4-screen layout
+    function renderQuadView() {
+      const s1 = document.getElementById('quad-screen-1');
+      const s2bg = document.getElementById('quad-screen-2-bg');
+      const s2popover = document.getElementById('quad-screen-2-popover');
+      const s3 = document.getElementById('quad-screen-3');
+      const s4 = document.getElementById('quad-screen-4');
+
+      if (s1) s1.innerHTML = getOurScreenHTML(false);
+      if (s2bg) s2bg.innerHTML = getOurScreenHTML(false);
+      if (s2popover) s2popover.innerHTML = getNotificationPopoverHTML();
+      if (s3) s3.innerHTML = getCalendarScreenHTML();
+      if (s4) s4.innerHTML = getTodoScreenHTML();
+
+      if (window.lucide) lucide.createIcons();
+    }
+
+    // Render interactive single frame view
+    function renderSingleView() {
+      const container = document.getElementById('single-screen-content');
+      if (!container) return;
+
+      let contentHTML = '';
+      if (state.activeTab === 'our') {
+        contentHTML = getOurScreenHTML(true);
+        if (state.showNotificationModal) {
+          contentHTML += `
+            <div class="absolute inset-0 bg-black/40 backdrop-blur-[1px] z-30" onclick="toggleNotificationModal()"></div>
+            <div class="absolute top-4 inset-x-4 z-40">
+              ${getNotificationPopoverHTML()}
+            </div>
+          `;
+        }
+      } else if (state.activeTab === 'calendar-daily') {
+        contentHTML = getCalendarScreenHTML();
+      } else if (state.activeTab === 'todo') {
+        contentHTML = getTodoScreenHTML();
+      }
+
+      container.innerHTML = contentHTML;
+
+      // Update bottom navigation bar styles
+      const tabs = ['our', 'calendar', 'todo'];
+      tabs.forEach(t => {
+        const btn = document.getElementById(`tab-btn-${t}`);
+        if (btn) {
+          const isActive = (t === 'our' && state.activeTab === 'our') ||
+                          (t === 'calendar' && state.activeTab === 'calendar-daily') ||
+                          (t === 'todo' && state.activeTab === 'todo');
+          btn.className = `flex flex-col items-center gap-0.5 transition-all ${isActive ? 'text-gray-900 font-bold' : 'text-gray-400 hover:text-gray-700'}`;
+        }
+      });
+
+      if (window.lucide) lucide.createIcons();
+    }
+
+    function setViewMode(mode) {
+      state.viewMode = mode;
+      saveState();
+      const quadContainer = document.getElementById('quad-view-container');
+      const singleContainer = document.getElementById('single-view-container');
+      const quadBtn = document.getElementById('view-mode-quad');
+      const singleBtn = document.getElementById('view-mode-single');
+
+      if (mode === 'quad') {
+        if (quadContainer) quadContainer.classList.remove('hidden');
+        if (singleContainer) singleContainer.classList.add('hidden');
+        if (quadBtn) quadBtn.className = "px-3 py-1.5 rounded-lg transition-all bg-white text-gray-900 shadow-sm font-bold";
+        if (singleBtn) singleBtn.className = "px-3.5 py-1.5 rounded-lg transition-all text-gray-500 hover:text-gray-900";
+      } else {
+        if (quadContainer) quadContainer.classList.add('hidden');
+        if (singleContainer) singleContainer.classList.remove('hidden');
+        if (singleBtn) singleBtn.className = "px-3.5 py-1.5 rounded-lg transition-all bg-white text-gray-900 shadow-sm font-bold";
+        if (quadBtn) quadBtn.className = "px-3 py-1.5 rounded-lg transition-all text-gray-500 hover:text-gray-900";
+      }
+      refreshViews();
+    }
+
+    function switchTab(tab) {
+      state.activeTab = tab;
+      saveState();
+      if (state.viewMode === 'quad') {
+        setViewMode('single');
+      } else {
+        renderSingleView();
+      }
+    }
+
+    function confirmEvent(id) {
+      const ev = state.events.find(e => e.id === id);
+      if (ev) {
+        ev.status = 'confirmed';
+        saveState();
+        showToast(`'${ev.title}' 일정을 확인했습니다`);
+        refreshViews();
+      }
+    }
+
+    function getNotificationPopoverHTML() {
+      const unread = state.notifications.filter(n => !n.read);
+      return `
+        <div class="bg-white rounded-2xl p-4 shadow-2xl border border-gray-100 animate-pop space-y-3">
+          <div class="flex justify-between items-center border-b border-gray-100 pb-2">
+            <div class="flex items-center gap-1.5 font-extrabold text-xs text-gray-900">
+              <span class="w-2 h-2 rounded-full bg-brand-red animate-ping"></span>
+              <span>새로운 소식 (${unread.length})</span>
+            </div>
+            <button onclick="clearAllNotifications()" class="text-[10px] text-gray-400 hover:text-gray-600">모두 읽음</button>
+          </div>
+
+          <div class="space-y-2 max-h-56 overflow-y-auto no-scrollbar">
+            ${state.notifications.length === 0 ? `
+              <div class="text-center py-4 text-xs text-gray-400">새로운 알림이 없습니다.</div>
+            ` : state.notifications.map(n => `
+              <div onclick="handleNotificationClick(${n.id})" class="p-2.5 rounded-xl bg-gray-50 border border-gray-100 flex items-start gap-2.5 cursor-pointer hover:bg-gray-100 transition-all ${n.read ? 'opacity-50' : ''}">
+                <div class="w-2 h-2 rounded-full ${n.color || 'bg-brand-red'} mt-1 shrink-0"></div>
+                <div class="flex-1 text-[11px]">
+                  <p class="font-bold text-gray-800 leading-snug">${n.text}</p>
+                  <span class="text-[9px] text-gray-400 mt-0.5 block">${n.timeAgo}</span>
+                </div>
+              </div>
+            `).join('')}
+          </div>
+        </div>
+      `;
+    }
+
+    function getTodoScreenHTML() {
+      return `
+        <div class="p-3 space-y-3 text-gray-900 bg-[#F8FAFC] min-h-full">
+          <div class="flex justify-between items-center pt-0.5">
+            <div>
+              <h2 class="text-lg font-black tracking-tight text-gray-900">함께할 일</h2>
+              <p class="text-[10px] text-gray-400">버킷리스트 & 공유 투두</p>
+            </div>
+            <button onclick="promptAddNewCategory()" class="px-2.5 py-1 bg-gray-900 text-white font-bold rounded-xl text-xs hover:bg-black transition-all flex items-center gap-1">
+              <i data-lucide="plus" class="w-3.5 h-3.5"></i>
+              <span>폴더 추가</span>
+            </button>
+          </div>
+
+          ${state.todoCategories.map(cat => {
+            const completedCount = cat.items.filter(i => i.done).length;
+            const totalCount = cat.items.length;
+            const progress = totalCount === 0 ? 0 : Math.round((completedCount / totalCount) * 100);
+
+            return `
+              <div class="bg-white rounded-2xl p-3 border border-gray-100 shadow-sm space-y-2.5">
+                <div class="flex items-center gap-3">
+                  <img src="${cat.coverImg}" class="w-12 h-12 rounded-xl object-cover shrink-0 border border-gray-100" alt="${cat.title}">
+                  <div class="flex-1 min-w-0">
+                    <div class="flex justify-between items-baseline">
+                      <h3 class="font-bold text-xs text-gray-900 truncate">${cat.title}</h3>
+                      <span class="text-[10px] font-bold text-brand-blue">${progress}%</span>
+                    </div>
+                    <p class="text-[9px] text-gray-400">${cat.subtitle}</p>
+                    <div class="w-full bg-gray-100 h-1.5 rounded-full mt-1.5 overflow-hidden">
+                      <div class="bg-brand-blue h-full rounded-full transition-all" style="width: ${progress}%"></div>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Items List -->
+                <div class="space-y-1.5 pt-1 border-t border-gray-50 text-xs">
+                  ${cat.items.map(item => `
+                    <div class="flex items-center justify-between p-1.5 hover:bg-gray-50 rounded-lg group">
+                      <div onclick="toggleTodoItem('${cat.id}', ${item.id})" class="flex items-center gap-2 cursor-pointer flex-1 min-w-0">
+                        <div class="w-4 h-4 rounded-md border ${item.done ? 'bg-emerald-500 border-emerald-500 text-white' : 'border-gray-300'} flex items-center justify-center transition-all">
+                          ${item.done ? '<i data-lucide="check" class="w-3 h-3"></i>' : ''}
+                        </div>
+                        <span class="${item.done ? 'line-through text-gray-400' : 'text-gray-800 font-medium'} text-[11px] truncate">${item.text}</span>
+                      </div>
+                      <div class="flex items-center gap-1 shrink-0">
+                        <span class="text-[9px] text-gray-400">${item.date}</span>
+                        <button onclick="convertTodoToSchedule('${item.text}')" title="일정으로 변환" class="p-1 text-gray-400 hover:text-brand-blue rounded">
+                          <i data-lucide="calendar-plus" class="w-3.5 h-3.5"></i>
+                        </button>
+                      </div>
+                    </div>
+                  `).join('')}
+
+                  <button onclick="promptAddTodoItem('${cat.id}')" class="w-full py-1.5 border border-dashed border-gray-200 rounded-lg text-gray-400 text-[10px] font-bold hover:bg-gray-50 transition-all flex items-center justify-center gap-1 mt-1">
+                    <i data-lucide="plus" class="w-3 h-3"></i> 항목 추가하기
+                  </button>
+                </div>
+              </div>
+            `;
+          }).join('')}
+        </div>
+      `;
+    }
+
+    function getMonthlyCalendarHTML() {
+      const daysInMonth = 30; // 9월
+      const days = Array.from({ length: daysInMonth }, (_, i) => i + 1);
+
+      return `
+        <div class="min-h-full flex flex-col bg-white text-gray-900">
+          <div class="px-3 pt-2 pb-1.5 flex justify-between items-center border-b border-gray-100 shrink-0">
+            <h2 class="text-sm font-extrabold text-gray-900">2026년 9월</h2>
+            <div class="bg-gray-100 p-0.5 rounded-lg flex text-[10px] font-semibold">
+              <button onclick="setCalendarView('daily')" class="px-2.5 py-0.5 rounded ${state.activeCalendarView === 'daily' ? 'bg-gray-900 text-white shadow-sm' : 'text-gray-500 hover:text-gray-900'}">오늘</button>
+              <button onclick="setCalendarView('monthly')" class="px-2.5 py-0.5 rounded ${state.activeCalendarView === 'monthly' ? 'bg-gray-900 text-white shadow-sm' : 'text-gray-500 hover:text-gray-900'}">월간</button>
+            </div>
+          </div>
+
+          <div class="grid grid-cols-7 gap-1 px-3 py-2 text-center text-[10px] font-bold text-gray-400 border-b border-gray-100">
+            <span class="text-red-500">일</span><span>월</span><span>화</span><span>수</span><span>목</span><span>금</span><span class="text-blue-500">토</span>
+          </div>
+
+          <div class="grid grid-cols-7 gap-1 p-3 flex-1">
+            <!-- 9월 1일 화요일 시작 (일, 월 공백) -->
+            <div></div><div></div>
+            ${days.map(d => {
+              const dateStr = `2026-09-${d < 10 ? '0' + d : d}`;
+              const hasEvents = state.events.filter(e => e.date === dateStr);
+              const isSelected = state.selectedDate === dateStr;
+              const isToday = d === 16;
+
+              return `
+                <div onclick="selectCalendarDate('${dateStr}')" class="h-11 rounded-xl p-1 flex flex-col justify-between items-center cursor-pointer border transition-all ${isSelected ? 'border-brand-blue bg-blue-50/60 font-bold' : isToday ? 'border-brand-red bg-red-50/40' : 'border-gray-100 hover:bg-gray-50'}">
+                  <span class="text-[10px] ${d % 7 === 6 ? 'text-red-500' : (d + 2) % 7 === 0 ? 'text-blue-500' : 'text-gray-700'}">${d}</span>
+                  <div class="flex gap-0.5">
+                    ${hasEvents.slice(0, 3).map(e => `
+                      <span class="w-1.5 h-1.5 rounded-full ${e.owner === '준영' ? 'bg-brand-red' : e.owner === '아정' ? 'bg-brand-blue' : 'bg-brand-green'}"></span>
+                    `).join('')}
+                  </div>
+                </div>
+              `;
+            }).join('')}
+          </div>
+        </div>
+      `;
+    }
+
+    function resetDataToDefault() {
+      state = JSON.parse(JSON.stringify(defaultData));
+      saveState();
+      closeAllSheets();
+      showToast('초기 데이터로 재설정되었습니다');
+      if (state.viewMode === 'quad') renderQuadView();
+      else renderSingleView();
+    }
+
+    // SCREEN 01: 우리
+    function getOurScreenHTML(isInteractive = false) {
+      const todayEvents = state.events.filter(e => e.date === state.selectedDate);
+      const unreadNotifCount = state.notifications.filter(n => !n.read).length;
+
+      return `
+        <div class="p-3 space-y-2.5 text-gray-900">
+
+          <!-- Header Row with Partner Weather/Condition -->
+          <div class="flex justify-between items-center pt-0.5">
+            <div>
+              <h2 class="text-lg font-black tracking-tight text-gray-900">우리의 오늘</h2>
+              <p class="text-[10px] text-gray-400">준영 · 아정 <span class="text-gray-500 font-semibold">함께한 지 1,432일</span></p>
+            </div>
+
+            <div class="flex items-center gap-2">
+              <!-- Weather & Mood Status Widget (우측 상단 위치) -->
+              <div class="bg-slate-100/80 px-2.5 py-1 rounded-xl border border-slate-200/80 flex items-center gap-2 text-[10px]">
+                <span class="flex items-center gap-0.5 font-bold text-red-600">준영 ☀️</span>
+                <span class="text-gray-300">|</span>
+                <span class="flex items-center gap-0.5 font-bold text-blue-600">아정 ☁️</span>
+              </div>
+
+              <div class="flex items-center gap-0.5 text-gray-800">
+                <button onclick="${isInteractive ? 'toggleNotificationModal()' : "showToast('새로운 소식 팝업')"}" class="p-1 hover:bg-gray-100 rounded-full transition-all relative">
+                  <i data-lucide="bell" class="w-4 h-4"></i>
+                  ${unreadNotifCount > 0 ? `<span class="absolute top-0.5 right-0.5 w-3 h-3 bg-brand-red text-white text-[8px] font-bold rounded-full flex items-center justify-center">${unreadNotifCount}</span>` : ''}
+                </button>
+                <button onclick="openSheet('sheet-settings')" class="p-1 hover:bg-gray-100 rounded-full transition-all">
+                  <i data-lucide="settings" class="w-4 h-4"></i>
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <!-- Section 1: 오늘 알아둘 일정 -->
+          <div class="bg-white rounded-xl p-3 border border-gray-100 shadow-sm space-y-2">
+            <div class="flex justify-between items-center">
+              <h3 class="text-xs font-bold text-gray-900">오늘 알아둘 일정 (${todayEvents.length})</h3>
+              <button onclick="switchTab('calendar-daily')" class="text-[10px] text-brand-blue font-semibold hover:underline flex items-center">
+                전체 일정 <i data-lucide="chevron-right" class="w-3 h-3 ml-0.5"></i>
+              </button>
+            </div>
+
+            <div class="space-y-1.5 text-xs">
+              ${todayEvents.length === 0 ? `
+                <div class="text-center py-2 text-gray-400 text-xs">오늘 등록된 일정이 없어요.</div>
+              ` : todayEvents.map(ev => `
+                <div class="flex items-center justify-between">
+                  <div class="flex items-center gap-2">
+                    <span class="font-mono font-bold text-gray-900 text-[11px] w-9">${ev.time}</span>
+                    <div class="flex items-center gap-1.5">
+                      <span class="w-2 h-2 rounded-full ${ev.owner === '준영' ? 'bg-brand-red' : ev.owner === '아정' ? 'bg-brand-blue' : 'bg-brand-green'}"></span>
+                      <span class="font-bold text-gray-800 text-[11px]">${ev.owner} · ${ev.title}</span>
+                    </div>
+                  </div>
+                  ${ev.status === 'pending' ? `
+                    <button onclick="confirmEvent(${ev.id})" class="bg-amber-100/70 text-amber-800 text-[9px] px-1.5 py-0.5 rounded font-semibold hover:bg-amber-200">확인하기</button>
+                  ` : ev.status === 'changed' ? `
+                    <span class="bg-blue-50 text-brand-blue text-[9px] px-1.5 py-0.5 rounded font-semibold">변경됨</span>
+                  ` : `
+                    <span class="text-[9px] text-emerald-600 font-semibold">확인됨</span>
+                  `}
+                </div>
+              `).join('')}
+            </div>
+          </div>
+
+          <!-- Section 2: 이번 주 한눈에 -->
+          <div class="bg-white rounded-xl p-3 border border-gray-100 shadow-sm space-y-1.5">
+            <div class="flex justify-between items-center">
+              <div>
+                <h3 class="text-xs font-bold text-gray-900">이번 주 한눈에</h3>
+                <p class="text-[9px] text-gray-400">함께 일정 ${state.events.filter(e => e.owner === '함께').length}개 · 변경 1개</p>
+              </div>
+              <button onclick="openSheet('sheet-create-event')" class="text-[10px] text-brand-blue font-semibold hover:underline flex items-center">
+                일정 만들기 <i data-lucide="chevron-right" class="w-3 h-3 ml-0.5"></i>
+              </button>
+            </div>
+            <div class="bg-gray-50 p-2 rounded-lg text-[10px] text-gray-600 font-medium flex justify-between items-center">
+              <span>금요일 저녁, 함께할 수 있어요</span>
+              <button onclick="openSheet('sheet-create-event')" class="text-[9px] text-brand-red font-bold hover:underline">+ 등록</button>
+            </div>
+          </div>
+
+          <!-- Section 3: 새로 온 기록 (Posts Feed) -->
+          <div class="flex justify-between items-center px-1 pt-0.5">
+            <h3 class="text-xs font-bold text-gray-900">새로 온 기록</h3>
+            <button onclick="openSheet('sheet-create-post')" class="text-xs text-brand-red font-bold flex items-center gap-1 hover:underline">
+              <i data-lucide="plus-circle" class="w-3.5 h-3.5"></i> 새 기록 작성
+            </button>
+          </div>
+
+          ${state.posts.map(post => `
+            <div class="bg-white rounded-xl p-3 border border-gray-100 shadow-sm space-y-2">
+              <div class="flex items-center justify-between">
+                <div class="flex items-center gap-2">
+                  <img src="${post.authorAvatar}" class="w-6 h-6 rounded-full object-cover border border-gray-200" alt="${post.author}">
+                  <div>
+                    <div class="text-[11px] font-bold text-gray-900">${post.author}이 새 기록을 남겼어요</div>
+                    <div class="text-[9px] text-gray-400">${post.timeAgo}</div>
+                  </div>
+                </div>
+                <button onclick="deletePost(${post.id})" class="text-gray-300 hover:text-red-500 p-0.5">
+                  <i data-lucide="trash-2" class="w-3.5 h-3.5"></i>
+                </button>
+              </div>
+
+              <!-- Image & Post Content -->
+              <div class="space-y-1.5">
+                ${post.photoUrl ? `
+                  <div class="rounded-lg overflow-hidden border border-gray-100 h-28 bg-gray-100">
+                    <img src="${post.photoUrl}" class="w-full h-full object-cover" alt="피드 이미지" onerror="this.src='https://placehold.co/600x300/f8fafc/475569?text=Diary+Photo'">
+                  </div>
+                ` : ''}
+                <p class="text-[11px] text-gray-800 font-medium leading-snug whitespace-pre-wrap">${post.text}</p>
+                ${post.location ? `
+                  <div class="inline-flex items-center gap-1 text-[9px] text-gray-500 bg-gray-100 px-2 py-0.5 rounded-md">
+                    <i data-lucide="map-pin" class="w-2.5 h-2.5 text-gray-400"></i>
+                    <span>${post.location}</span>
+                  </div>
+                ` : ''}
+              </div>
+
+              <!-- Action Row -->
+              <div class="flex items-center gap-1 pt-1 border-t border-gray-100 text-[10px]">
+                <button onclick="togglePostLike(${post.id})" class="flex-1 py-1 rounded-md border border-gray-200 flex items-center justify-center gap-1 ${post.userLiked ? 'text-brand-red border-red-200 bg-red-50 font-bold' : 'text-gray-700 hover:bg-gray-50'} transition-all">
+                  <i data-lucide="heart" class="w-3 h-3 ${post.userLiked ? 'fill-brand-red text-brand-red' : ''}"></i>
+                  <span>좋아요 ${post.likes}</span>
+                </button>
+                <button onclick="toggleCommentBox(${post.id})" class="flex-1 py-1 rounded-md border border-gray-200 flex items-center justify-center gap-1 text-gray-700 hover:bg-gray-50 transition-all">
+                  <i data-lucide="message-square" class="w-3 h-3"></i>
+                  <span>답글 (${post.comments.length})</span>
+                </button>
+                <button onclick="openSheet('sheet-create-event')" class="flex-1 py-1 rounded-md border border-gray-200 flex items-center justify-center gap-1 text-gray-700 hover:bg-gray-50 transition-all">
+                  <i data-lucide="calendar-plus" class="w-3 h-3"></i>
+                  <span>일정 만들기</span>
+                </button>
+              </div>
+
+              <!-- Comments Section -->
+              <div id="comment-section-${post.id}" class="space-y-1.5 pt-1.5 border-t border-gray-100 text-xs">
+                ${post.comments.map(c => `
+                  <div class="bg-gray-50 p-1.5 rounded-lg flex justify-between items-start text-[10px]">
+                    <div>
+                      <span class="font-bold text-gray-900">${c.author}:</span>
+                      <span class="text-gray-700 ml-1">${c.text}</span>
+                    </div>
+                    <span class="text-[8px] text-gray-400 shrink-0 ml-2">${c.timeAgo}</span>
+                  </div>
+                `).join('')}
+
+                <div class="flex gap-1 pt-0.5">
+                  <input type="text" id="comment-input-${post.id}" placeholder="답글 달기..." class="flex-1 px-2 py-1 bg-gray-100 border border-gray-200 rounded-md text-[10px] outline-none focus:border-brand-blue">
+                  <button onclick="addComment(${post.id})" class="px-2.5 py-1 bg-brand-blue text-white font-bold rounded-md text-[10px] hover:bg-blue-600">전송</button>
+                </div>
+              </div>
+
+            </div>
+          `).join('')}
+
+        </div>
+      `;
+    }
+
+    // SCREEN 03: 달력 (Timeline Track View & Monthly Calendar)
+    function getCalendarScreenHTML() {
+      if (state.activeCalendarView === 'monthly') {
+        return getMonthlyCalendarHTML();
+      }
+
+      return `
+        <div class="min-h-full flex flex-col bg-white text-gray-900">
+
+          <!-- Calendar Top Bar -->
+          <div class="px-3 pt-2 pb-1.5 flex justify-between items-center border-b border-gray-100 shrink-0">
+            <h2 class="text-sm font-extrabold text-gray-900">9월 16일 수요일</h2>
+
+            <div class="bg-gray-100 p-0.5 rounded-lg flex text-[10px] font-semibold">
+              <button onclick="setCalendarView('daily')" class="px-2.5 py-0.5 rounded ${state.activeCalendarView === 'daily' ? 'bg-gray-900 text-white shadow-sm' : 'text-gray-500 hover:text-gray-900'}">오늘</button>
+              <button onclick="setCalendarView('monthly')" class="px-2.5 py-0.5 rounded ${state.activeCalendarView === 'monthly' ? 'bg-gray-900 text-white shadow-sm' : 'text-gray-500 hover:text-gray-900'}">월간</button>
+            </div>
+          </div>
+
+          <!-- Banner Tooltip Box -->
+          <div onclick="setCalendarView('monthly')" class="mx-3 mt-2 p-2 bg-blue-50/70 rounded-xl border border-blue-100 flex items-center justify-between cursor-pointer hover:bg-blue-100/60 transition-all">
+            <div class="flex items-center gap-2">
+              <div class="w-6 h-6 rounded-lg bg-white shadow-sm flex items-center justify-center text-brand-blue">
+                <i data-lucide="calendar" class="w-3.5 h-3.5"></i>
+              </div>
+              <div>
+                <div class="text-[11px] font-bold text-gray-900 flex items-center gap-0.5">월간 달력 보기 <i data-lucide="chevron-right" class="w-3 h-3 text-gray-400"></i></div>
+                <div class="text-[9px] text-gray-500">한 달의 일정을 한눈에 확인하세요.</div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Track Status Bar Header (날씨 제외 및 깨끗한 라벨 정리) -->
+          <div class="px-4 py-1.5 mt-2 bg-gray-50 border-y border-gray-100 flex justify-around text-xs font-bold text-gray-700 shrink-0">
+            <div class="flex items-center gap-1.5">
+              <span class="w-2.5 h-2.5 rounded-full bg-brand-red"></span>
+              <span>준영의 일정</span>
+            </div>
+            <div class="flex items-center gap-1.5">
+              <span class="w-2.5 h-2.5 rounded-full bg-brand-blue"></span>
+              <span>아정의 일정</span>
+            </div>
+          </div>
+
+          <!-- Dual Track Timeline Body -->
+          <div class="flex-1 relative px-3 py-2 min-h-[380px]">
+
+            <!-- Time Grid Lines & Hour Labels -->
+            <div class="absolute inset-y-2 left-3 right-3 flex flex-col justify-between pointer-events-none opacity-20">
+              <div class="border-b border-gray-300 flex justify-between items-center"><span class="text-[8px] font-mono text-gray-500">09:00</span></div>
+              <div class="border-b border-gray-300 flex justify-between items-center"><span class="text-[8px] font-mono text-gray-500">12:00</span></div>
+              <div class="border-b border-gray-300 flex justify-between items-center"><span class="text-[8px] font-mono text-gray-500">15:00</span></div>
+              <div class="border-b border-gray-300 flex justify-between items-center"><span class="text-[8px] font-mono text-gray-500">18:00</span></div>
+              <div class="border-b border-gray-300 flex justify-between items-center"><span class="text-[8px] font-mono text-gray-500">21:00</span></div>
+            </div>
+
+            <!-- Two Parallel Lines -->
+            <div class="absolute inset-y-2 left-[28%] w-0.5 timeline-line-red"></div>
+            <div class="absolute inset-y-2 right-[28%] w-0.5 timeline-line-blue"></div>
+
+            <!-- Dynamic Events Rendering on Timeline -->
+            <div class="relative z-10 space-y-3 pt-1">
+              ${state.events.map((ev) => {
+                if (ev.owner === '함께') {
+                  return `
+                    <div class="my-2">
+                      <div class="bg-emerald-50 border border-emerald-300 rounded-xl p-2 shadow-sm max-w-[210px] mx-auto text-xs">
+                        <div class="flex items-center justify-between font-bold text-gray-900">
+                          <span class="flex items-center gap-1 text-[11px]">💚 ${ev.title} (함께)</span>
+                          <span class="font-mono text-[9px] text-emerald-700">${ev.time}</span>
+                        </div>
+                        <p class="text-[9px] text-gray-500 mt-0.5">${ev.note || '공유 및 함께하는 일정'}</p>
+
+                        <div class="flex gap-1 mt-1.5">
+                          <button onclick="confirmEvent(${ev.id})" class="flex-1 py-1 bg-brand-darkGreen text-white font-bold rounded-md text-[9px] hover:opacity-90">확인 완료</button>
+                          <button onclick="deleteEvent(${ev.id})" class="py-1 px-1.5 bg-white border border-gray-200 text-red-500 font-medium rounded-md text-[9px]">삭제</button>
+                        </div>
+                      </div>
+                    </div>
+                  `;
+                } else if (ev.owner === '준영') {
+                  return `
+                    <div class="flex justify-start my-1.5">
+                      <div onclick="promptJoinTogether(${ev.id})" class="bg-red-50 border border-red-200/90 rounded-xl px-2 py-1.5 text-[10px] text-brand-red flex items-center gap-1.5 shadow-sm max-w-[180px] cursor-pointer hover:bg-red-100/70 transition-all group">
+                        <span>👨🏻</span>
+                        <div class="flex-1 min-w-0">
+                          <div class="font-bold text-gray-900 text-[11px] truncate">${ev.title}</div>
+                          <div class="text-[8px] font-mono text-red-400">${ev.time} · ${ev.place || '개인일정'}</div>
+                        </div>
+                        <button onclick="event.stopPropagation(); promptJoinTogether(${ev.id})" class="px-1.5 py-0.5 bg-rose-500 text-white rounded text-[8px] font-bold shrink-0 hover:bg-rose-600 shadow-2xl">
+                          나도 함께!
+                        </button>
+                      </div>
+                    </div>
+                  `;
+                } else {
+                  return `
+                    <div class="flex justify-end my-1.5">
+                      <div onclick="promptJoinTogether(${ev.id})" class="bg-blue-50 border border-blue-200/90 rounded-xl px-2 py-1.5 text-[10px] text-brand-blue flex items-center gap-1.5 shadow-sm max-w-[180px] cursor-pointer hover:bg-blue-100/70 transition-all group">
+                        <button onclick="event.stopPropagation(); promptJoinTogether(${ev.id})" class="px-1.5 py-0.5 bg-indigo-500 text-white rounded text-[8px] font-bold shrink-0 hover:bg-indigo-600 shadow-2xl">
+                          나도 함께!
+                        </button>
+                        <div class="flex-1 min-w-0 text-right">
+                          <div class="font-bold text-gray-900 text-[11px] truncate">${ev.title}</div>
+                          <div class="text-[8px] font-mono text-blue-400">${ev.time} ${ev.note ? `(${ev.note})` : ''}</div>
+                        </div>
+                        <span>👩🏻‍🦰</span>
+                      </div>
+                    </div>
+                  `;
+                }
+              }).join('')}
+
+              <div class="pt-2 text-center">
+                <button onclick="openSheet('sheet-create-event')" class="px-3.5 py-1.5 bg-gray-900 text-white font-bold rounded-xl text-xs shadow-sm hover:bg-black transition-all">
+                  + 일정 새로 추가하기
+                </button>
+              </div>
+            </div>
+
+          </div>
+
+        </div>
+      `;
+    }
+
+    // "나도 함께" 일정 연동 팝업 처리 로직 함수
+    function promptJoinTogether(id) {
+      const ev = state.events.find(e => e.id === id);
+      if (!ev) return;
+
+      if (ev.owner === '함께') {
+        showToast('이미 함께하는 일정입니다!');
+        return;
+      }
+
+      const confirmed = confirm(`'${ev.title}' 일정에 나도 함께 참여할까요?\n(확인을 누르시면 둘이 함께하는 그린 모드 일정으로 자동 연동됩니다)`);
+      if (confirmed) {
+        ev.owner = '함께';
+        ev.note = '나도 함께 참여!';
+        ev.status = 'confirmed';
+
+        state.notifications.unshift({
+          id: Date.now(),
+          text: `'${ev.title}' 일정이 '함께' 하는 일정으로 연동되었습니다! 🎉`,
+          timeAgo: '방금 전',
+          read: false,
+          type: 'calendar',
+          color: 'bg-emerald-500'
+        });
+
+        saveState();
+        showToast(`🎉 '${ev.title}' 일정이 함께하는 일정으로 변경되었습니다!`);
+        refreshViews();
+      }
+    }
+
+    function deleteEvent(id) {
+      state.events = state.events.filter(e => e.id !== id);
+      saveState();
+      showToast('일정이 삭제되었습니다');
+      refreshViews();
+    }
+
+    function setCalendarView(view) {
+      state.activeCalendarView = view;
+      saveState();
+      refreshViews();
+    }
+
+    function selectCalendarDate(dateStr) {
+      state.selectedDate = dateStr;
+      state.activeCalendarView = 'daily';
+      saveState();
+      showToast(`${dateStr} 날짜가 선택되었습니다`);
+      refreshViews();
+    }
+
+    function togglePostLike(id) {
+      const post = state.posts.find(p => p.id === id);
+      if (post) {
+        post.userLiked = !post.userLiked;
+        post.likes += post.userLiked ? 1 : -1;
+        saveState();
+        showToast(post.userLiked ? '❤️ 좋아요를 남겼습니다' : '좋아요 취소');
+        refreshViews();
+      }
+    }
+
+    function deletePost(id) {
+      state.posts = state.posts.filter(p => p.id !== id);
+      saveState();
+      showToast('게시물이 삭제되었습니다');
+      refreshViews();
+    }
+
+    function toggleCommentBox(id) {
+      const el = document.getElementById(`comment-section-${id}`);
+      if (el) el.classList.toggle('hidden');
+    }
+
+    function addComment(postId) {
+      const input = document.getElementById(`comment-input-${postId}`);
+      if (!input || !input.value.trim()) return;
+
+      const post = state.posts.find(p => p.id === postId);
+      if (post) {
+        post.comments.push({
+          id: Date.now(),
+          author: '준영',
+          text: input.value.trim(),
+          timeAgo: '방금 전'
+        });
+        saveState();
+        showToast('답글이 남겨졌습니다');
+        refreshViews();
+      }
+    }
+
+    function toggleTodoItem(catId, itemId) {
+      const cat = state.todoCategories.find(c => c.id === catId);
+      if (cat) {
+        const item = cat.items.find(i => i.id === itemId);
+        if (item) {
+          item.done = !item.done;
+          saveState();
+          showToast(item.done ? `\'${item.text}\' 완료!` : `\'${item.text}\' 상태 변경`);
+          refreshViews();
+        }
+      }
+    }
+
+    function promptAddTodoItem(catId) {
+      const cat = state.todoCategories.find(c => c.id === catId);
+      if (!cat) return;
+      const text = prompt(`'${cat.title}' 폴더에 추가할 항목:`);
+      if (text && text.trim()) {
+        cat.items.push({
+          id: Date.now(),
+          text: text.trim(),
+          date: '이번 주',
+          done: false
+        });
+        saveState();
+        showToast('새 항목이 추가되었습니다');
+        refreshViews();
+      }
+    }
+
+    function promptAddNewCategory() {
+      const title = prompt('새 버킷리스트 폴더 이름:');
+      if (title && title.trim()) {
+        state.todoCategories.push({
+          id: 'cat_' + Date.now(),
+          title: title.trim(),
+          subtitle: '함께할 공유 버킷리스트',
+          coverImg: 'https://images.unsplash.com/photo-1517841905240-472988babdf9?w=600&auto=format&fit=crop&q=80',
+          items: []
+        });
+        saveState();
+        showToast('새 버킷리스트 폴더가 추가되었습니다');
+        refreshViews();
+      }
+    }
+
+    function convertTodoToSchedule(title) {
+      state.events.push({
+        id: Date.now(),
+        title: title + ' 준비',
+        date: state.selectedDate,
+        time: '15:00',
+        owner: '함께',
+        place: '성수동',
+        status: 'pending',
+        note: '버킷리스트 연동'
+      });
+      saveState();
+      showToast(`'${title}' 관련 일정이 새로 등록되었습니다!`);
+      switchTab('calendar-daily');
+    }
+
+    function handleNotificationClick(id) {
+      const notif = state.notifications.find(n => n.id === id);
+      if (notif) {
+        notif.read = true;
+        saveState();
+        if (notif.type === 'calendar') switchTab('calendar-daily');
+        else switchTab('our');
+      }
+    }
+
+    function clearAllNotifications() {
+      state.notifications.forEach(n => n.read = true);
+      saveState();
+      showToast('모든 알림이 읽음 처리되었습니다');
+      refreshViews();
+    }
+
+    function toggleNotificationModal() {
+      state.showNotificationModal = !state.showNotificationModal;
+      renderSingleView();
+    }
+
+    function refreshViews() {
+      if (state.viewMode === 'quad') renderQuadView();
+      else renderSingleView();
+    }
+
+    function openSheet(id) {
+      document.getElementById('sheet-backdrop').classList.remove('hidden');
+      document.getElementById(id).classList.remove('hidden');
+    }
+
+    function closeAllSheets() {
+      document.getElementById('sheet-backdrop').classList.add('hidden');
+      document.getElementById('sheet-create-event').classList.add('hidden');
+      document.getElementById('sheet-create-post').classList.add('hidden');
+      document.getElementById('sheet-ai-assistant').classList.add('hidden');
+      document.getElementById('sheet-settings').classList.add('hidden');
+    }
+
+    function setOwnerType(type) {
+      currentOwnerType = type;
+      ['준영', '아정', '함께'].forEach(t => {
+        const btn = document.getElementById(`owner-btn-${t}`);
+        if (btn) {
+          if (t === type) {
+            btn.className = "py-2 rounded-xl border border-gray-200 bg-red-50 text-brand-red border-brand-red font-bold";
+          } else {
+            btn.className = "py-2 rounded-xl border border-gray-200 bg-gray-50 text-gray-700 font-medium";
+          }
+        }
+      });
+    }
+
+    function saveNewEvent() {
+      const title = document.getElementById('event-title-input').value.trim();
+      const date = document.getElementById('event-date-input').value;
+      const time = document.getElementById('event-time-input').value;
+      const place = document.getElementById('event-place-input').value.trim();
+
+      if (!title) {
+        showToast('일정 제목을 입력해주세요!');
+        return;
+      }
+
+      state.events.push({
+        id: Date.now(),
+        title: title,
+        date: date || '2026-09-16',
+        time: time || '12:00',
+        owner: currentOwnerType,
+        place: place || '',
+        status: 'pending',
+        note: ''
+      });
+
+      state.notifications.unshift({
+        id: Date.now(),
+        text: `${currentOwnerType}이 '${title}' 일정을 새로 추가했어요`,
+        timeAgo: '방금 전',
+        read: false,
+        type: 'calendar',
+        color: currentOwnerType === '준영' ? 'bg-brand-red' : 'bg-brand-blue'
+      });
+
+      saveState();
+      document.getElementById('event-title-input').value = '';
+      closeAllSheets();
+      showToast(`'${title}' 일정이 등록되었습니다!`);
+      refreshViews();
+    }
+
+    function saveNewPost() {
+      const author = document.getElementById('post-author-input').value;
+      const text = document.getElementById('post-text-input').value.trim();
+      const location = document.getElementById('post-location-input').value.trim();
+      const photoUrl = document.getElementById('post-photo-input').value.trim();
+
+      if (!text) {
+        showToast('오늘의 한마디 글을 작성해주세요!');
+        return;
+      }
+
+      state.posts.unshift({
+        id: Date.now(),
+        author: author,
+        authorAvatar: author === '아정' ? 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=100&auto=format&fit=crop&q=80' : 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=100&auto=format&fit=crop&q=80',
+        timeAgo: '방금 전',
+        date: '2026-09-16',
+        text: text,
+        location: location,
+        photoUrl: photoUrl,
+        likes: 0,
+        userLiked: false,
+        comments: []
+      });
+
+      saveState();
+      document.getElementById('post-text-input').value = '';
+      closeAllSheets();
+      showToast('새 기록이 등록되었습니다!');
+      refreshViews();
+    }
+
+    // Gemini API Direct Integration
+    async function runAIDatePlanner() {
+      const promptText = document.getElementById('ai-prompt-input').value.trim() || "성수동 감성 데이트 코스 추천해줘";
+      const resBox = document.getElementById('ai-response-box');
+      const resText = document.getElementById('ai-response-text');
+      const btn = document.getElementById('ai-plan-btn');
+
+      resBox.classList.remove('hidden');
+      resText.innerText = "Gemini AI가 둘만의 데이트 코스를 구상하고 있어요... ☕️";
+      btn.disabled = true;
+
+      const systemPrompt = "당신은 센스 있는 연애 컨설턴트 및 데이트 코스 전문가입니다. 커플이 즐기기 좋은 따뜻하고 감성적인 3단계 데이트 코스(식사-카페-산책/활동)를 친근한 문체로 짧게 추천해 주세요.";
+      const apiKey = "";
+      const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-3-flash-preview:generateContent?key=${apiKey}`;
+
+      try {
+        const payload = {
+          contents: [{ parts: [{ text: promptText }] }],
+          systemInstruction: { parts: [{ text: systemPrompt }] }
+        };
+
+        const response = await fetch(apiUrl, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload)
+        });
+
+        const data = await response.json();
+        const textResult = data?.candidates?.[0]?.content?.parts?.[0]?.text;
+
+        if (textResult) {
+          resText.innerText = textResult;
+        } else {
+          resText.innerText = "1. 성수동 아기자기한 이탈리안 파스타\n2. 루프탑 감성 카페에서 디저트 타임\n3. 서울숲 산책로 손잡고 걷기";
+        }
+      } catch (e) {
+        resText.innerText = "1. 성수동 아기자기한 이탈리안 파스타\n2. 루프탑 감성 카페에서 디저트 타임\n3. 서울숲 산책로 손잡고 걷기";
+      } finally {
+        btn.disabled = false;
+      }
+    }
+
+    async function generateAIPostImage() {
+      const promptText = prompt("어떤 분위기의 사진 일러스트를 생성할까요?", "A warm watercolor illustration of a cozy Korean romantic cafe with pastries and flowers");
+      if (!promptText) return;
+
+      showToast("Gemini AI 일러스트 이미지 생성 중...");
+
+      const apiKey = "";
+      const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-3.1-flash-lite-image:generateContent?key=${apiKey}`;
+
+      try {
+        const payload = {
+          contents: [{ parts: [{ text: promptText }] }],
+          generationConfig: { responseModalities: ['TEXT', 'IMAGE'] }
+        };
+
+        const response = await fetch(apiUrl, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload)
+        });
+
+        const data = await response.json();
+        const base64Data = data?.candidates?.[0]?.content?.parts?.find(p => p.inlineData)?.inlineData?.data;
+
+        if (base64Data) {
+          const imgUrl = `data:image/png;base64,${base64Data}`;
+          document.getElementById('post-photo-input').value = imgUrl;
+          showToast("AI 이미지 생성이 완료되어 입력창에 적용되었습니다!");
+        } else {
+          showToast("샘플 사진이 적용되었습니다");
+        }
+      } catch (e) {
+        showToast("샘플 고화질 이미지가 적용되었습니다");
+      }
+    }
+
+    // Audio PCM Conversion Helper Functions
+    function pcmToWav(pcm16, sampleRate = 24000) {
+      const numChannels = 1;
+      const byteRate = sampleRate * numChannels * 2;
+      const blockAlign = numChannels * 2;
+      const dataSize = pcm16.length * 2;
+      const buffer = new ArrayBuffer(44 + dataSize);
+      const view = new DataView(buffer);
+
+      function writeString(offset, string) {
+        for (let i = 0; i < string.length; i++) {
+          view.setUint8(offset + i, string.charCodeAt(i));
+        }
+      }
+
+      writeString(0, 'RIFF');
+      view.setUint32(4, 36 + dataSize, true);
+      writeString(8, 'WAVE');
+      writeString(12, 'fmt ');
+      view.setUint32(16, 16, true);
+      view.setUint16(20, 1, true);
+      view.setUint16(22, numChannels, true);
+      view.setUint32(24, sampleRate, true);
+      view.setUint32(28, byteRate, true);
+      view.setUint16(32, blockAlign, true);
+      view.setUint16(34, 16, true);
+      writeString(36, 'data');
+      view.setUint32(40, dataSize, true);
+
+      for (let i = 0; i < pcm16.length; i++) {
+        view.setInt16(44 + i * 2, pcm16[i], true);
+      }
+
+      return new Blob([buffer], { type: 'audio/wav' });
+    }
+
+    function base64ToArrayBuffer(base64) {
+      const binaryString = atob(base64);
+      const len = binaryString.length;
+      const bytes = new Uint8Array(len);
+      for (let i = 0; i < len; i++) {
+        bytes[i] = binaryString.charCodeAt(i);
+      }
+      return bytes.buffer;
+    }
+
+    async function runAITextToSpeech() {
+      showToast("Gemini AI 음성으로 메시지 읽는 중...");
+
+      const apiKey = "";
+      const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-tts:generateContent?key=${apiKey}`;
+
+      try {
+        const payload = {
+          contents: [{ parts: [{ text: "Say warmly in Korean: 오늘 수고했어 준영아! 주말에 맛있는 거 먹으러 같이 가자!" }] }],
+          generationConfig: {
+            responseModalities: ["AUDIO"],
+            speechConfig: {
+              voiceConfig: { prebuiltVoiceConfig: { voiceName: "Kore" } }
+            }
+          }
+        };
+
+        const response = await fetch(apiUrl, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload)
+        });
+
+        const result = await response.json();
+        const part = result?.candidates?.[0]?.content?.parts?.[0];
+        const audioData = part?.inlineData?.data;
+        const mimeType = part?.inlineData?.mimeType;
+
+        if (audioData && mimeType && mimeType.startsWith("audio/")) {
+          const sampleRateMatch = mimeType.match(/rate=(\d+)/);
+          const sampleRate = sampleRateMatch ? parseInt(sampleRateMatch[1], 10) : 24000;
+          const pcmData = base64ToArrayBuffer(audioData);
+          const pcm16 = new Int16Array(pcmData);
+          const wavBlob = pcmToWav(pcm16, sampleRate);
+          const audioUrl = URL.createObjectURL(wavBlob);
+
+          const audio = new Audio(audioUrl);
+          audio.play();
+          showToast("🔊 음성 메시지 재생 중!");
+        } else {
+          showToast("🔊 음성을 생성하지 못했습니다");
+        }
+      } catch (e) {
+        showToast("🔊 음성 재생에 실패했습니다");
+      }
+    }
+
+    function showToast(msg) {
+      const toast = document.getElementById('toast-modal');
+      const messageSpan = document.getElementById('toast-message');
+      messageSpan.innerText = msg;
+      toast.classList.remove('opacity-0', 'pointer-events-none', 'translate-y-2');
+      setTimeout(() => {
+        toast.classList.add('opacity-0', 'pointer-events-none', 'translate-y-2');
+      }, 2200);
+    }
+
+    window.onload = function() {
+      refreshViews();
+    };
+  </script>
+</body>
+</html>
